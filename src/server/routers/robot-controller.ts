@@ -141,4 +141,12 @@ export const robotRouter = t.router({
         }
         return robotState;
     }),
+
+    joystick: t.procedure.input(z.array(z.object({
+        index: z.number(),
+        id: z.string(),
+        axes: z.array(z.number()),
+        buttons: z.array(z.boolean())
+    }))).query(async ({ input }) => {
+    })
 });

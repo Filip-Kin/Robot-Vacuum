@@ -47,7 +47,6 @@ export class Robot {
 
     public async teleopInit() {
         log.log('Teleop Init');
-        throw new Error('Method not implemented.');
     }
 
     public async teleopPeriodic() {

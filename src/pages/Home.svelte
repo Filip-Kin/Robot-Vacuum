@@ -1,10 +1,12 @@
 <script lang="ts">
     import { onDestroy, onMount } from 'svelte';
     import { trpc } from '../lib/trpc';
-    import { Button, Label, Textarea } from 'flowbite-svelte';
+    import { Button } from 'flowbite-svelte';
     import { State } from "../server/types";
     import type { DashboardPost } from '../server/routers/robot-controller';
     import Log from '../components/Log.svelte';
+    import { getJoysticks } from '../lib/driverstation';
+    import Joystick from '../components/Joystick.svelte';
 
     let subscription: ReturnType<typeof trpc.robot.dashboard.subscribe> | undefined = undefined;
 
@@ -14,6 +16,8 @@
             onData: handleDashboardFrame
         });
         console.log('Connected To Robot');
+
+        getJoysticks();
     });
 
     onDestroy(() => {
@@ -24,7 +28,6 @@
     let battery = "0.00";
 
     async function handleDashboardFrame(data: DashboardPost) {
-        console.log(data);
         robotState = data.state;
         battery = data.battery.toFixed(2);
     }
@@ -34,6 +37,17 @@
             state: (robotState === State.DISABLED) ? State.TELEOP : State.DISABLED
         });
     }
+
+    let joysticks = getJoysticks();
+
+    setInterval(async () => {
+        joysticks = getJoysticks();
+
+        console.log(joysticks[0]);
+
+        await trpc.robot.joystick.query(joysticks);
+    }, 50);
+
 </script>
 
 <main class="w-full max-w-4xl mx-auto mt-2">
@@ -56,5 +70,12 @@
         <div class="w-full grow">
             <Log />
         </div>
+    </div>
+    <div>
+        {#key joysticks}
+            {#each joysticks as joystick, index}
+                <Joystick {joystick} />
+            {/each}
+        {/key}
     </div>
 </main>

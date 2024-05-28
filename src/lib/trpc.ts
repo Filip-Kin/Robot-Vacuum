@@ -9,7 +9,7 @@ const wsClient = createWSClient({
 export const trpc = createTRPCProxyClient<AppRouter>({
     links: [
         splitLink({
-            condition: (op) => op.type === 'subscription',
+            condition: (op) => (op.type === 'subscription' || op.path === '/robot/joystick'),
             true: wsLink({ client: wsClient }),
             false: httpBatchLink({ url: '/trpc' }),
         }),
