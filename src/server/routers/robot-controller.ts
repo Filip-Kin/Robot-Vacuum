@@ -5,6 +5,7 @@ import { z } from "zod";
 import { State } from "../types";
 import EventEmitter from "events";
 import { log } from "../util/log";
+import { Joystick, joysticks } from "../util/joysticks";
 
 let robotState: State = State.DISABLED;
 export const robotInstance = new Robot();
@@ -22,6 +23,8 @@ async function robotLoop() {
                 await robotInstance.teleopPeriodic();
             } else if (robotState === State.AUTONOMOUS) {
                 await robotInstance.autonomousPeriodic();
+            } else {
+                await robotInstance.disabledPeriodic();
             }
         });
 
@@ -130,11 +133,15 @@ export const robotRouter = t.router({
             if (input.state === State.TELEOP) {
                 await robotInstance.teleopInit();
                 robotState = State.TELEOP;
+                Joystick.enableAll();
             } else if (input.state === State.AUTONOMOUS) {
                 await robotInstance.autonomousInit();
                 robotState = State.AUTONOMOUS;
+                Joystick.disableAll();
             } else {
+                await robotInstance.disabledInit();
                 robotState = State.DISABLED;
+                Joystick.disableAll();
             }
         } catch (e) {
             log.error(e);
@@ -148,5 +155,21 @@ export const robotRouter = t.router({
         axes: z.array(z.number()),
         buttons: z.array(z.boolean())
     }))).query(async ({ input }) => {
+        for (let joystick of input) {
+            let joystickCorrectType = {
+                index: joystick.index as 0 | 1 | 2 | 3,
+                id: joystick.id,
+                axes: joystick.axes,
+                buttons: joystick.buttons
+            };
+
+            let joystickFromArray = joysticks[joystickCorrectType.index];
+
+            if (joystickFromArray) {
+                joystickFromArray.update(joystickCorrectType);
+            } else {
+                joystickFromArray = new Joystick(joystickCorrectType);
+            }
+        }
     })
 });

@@ -7,6 +7,8 @@
     import Log from '../components/Log.svelte';
     import { getJoysticks } from '../lib/driverstation';
     import Joystick from '../components/Joystick.svelte';
+    import Bar from '../components/Bar.svelte';
+    import Boolean from '../components/Boolean.svelte';
 
     let subscription: ReturnType<typeof trpc.robot.dashboard.subscribe> | undefined = undefined;
 
@@ -17,19 +19,45 @@
         });
         console.log('Connected To Robot');
 
-        getJoysticks();
+        if (!joystickLoop) {
+            joystickLoop = setInterval(async () => {
+                joysticks = getJoysticks();
+                await trpc.robot.joystick.query(joysticks);
+            }, 50);
+        }
     });
 
     onDestroy(() => {
         if (subscription) subscription.unsubscribe();
+        clearInterval(joystickLoop);
     });
 
     let robotState: State = State.DISABLED;
-    let battery = "0.00";
+
+    let dashboard: DashboardPost = {
+        state: robotState,
+        battery: 0,
+        leftSpeed: 0,
+        rightSpeed: 0,
+        speed: 0,
+        rotation: 0,
+        vacuum: false,
+    }
 
     async function handleDashboardFrame(data: DashboardPost) {
         robotState = data.state;
-        battery = data.battery.toFixed(2);
+        for (const key in data) {
+            const k = key as keyof DashboardPost;
+            const value = data[k];
+            if (Object.prototype.hasOwnProperty.call(data, k)) {
+                if (value === undefined) continue;
+                if (k === 'battery') {
+                    dashboard.battery = Math.round(value * 100) / 100;
+                } else {
+                    dashboard[k] = value;
+                }
+            }
+        }
     }
 
     async function enable() {
@@ -40,17 +68,17 @@
 
     let joysticks = getJoysticks();
 
-    setInterval(async () => {
-        joysticks = getJoysticks();
-
-        console.log(joysticks[0]);
-
-        await trpc.robot.joystick.query(joysticks);
-    }, 50);
-
+    let joystickLoop: NodeJS.Timeout | undefined = undefined;
 </script>
 
-<main class="w-full max-w-4xl mx-auto mt-2">
+<main class="w-full max-w-4xl mx-auto mt-2 flex flex-col gap-4">
+    <div class="grid grid-cols-2 gap-2">
+        <Bar label="Speed" value={dashboard.speed} min={-1} max={1} />
+        <Bar label="Left Speed" value={dashboard.leftSpeed} min={-1} max={1} />
+        <Bar label="Rotation" value={dashboard.rotation} min={-1} max={1} />
+        <Bar label="Right Speed" value={dashboard.rightSpeed} min={-1} max={1} />
+        <Boolean label="Vacuum" value={dashboard.vacuum} />
+    </div>
     <div class="flex gap-2 max-h-72">
         <div class="flex flex-col w-96 gap-2 justify-center text-xl text-center">
             <div class="font-bold">
@@ -63,7 +91,7 @@
                 {/if}
             </div>
             <div>
-                <p>Battery: {battery}V</p>
+                <p>Battery: {dashboard.battery}V</p>
             </div>
             <Button on:click={() => enable()}>{robotState === State.DISABLED ? "Enable" : "Disable"}</Button>
         </div>
@@ -73,7 +101,7 @@
     </div>
     <div>
         {#key joysticks}
-            {#each joysticks as joystick, index}
+            {#each joysticks as joystick}
                 <Joystick {joystick} />
             {/each}
         {/key}

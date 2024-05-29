@@ -5,7 +5,7 @@ export enum State {
 };
 
 export interface Joystick {
-    index: number,
+    index: 0 | 1 | 2 | 3,
     id: string,
     axes: number[],
     buttons: boolean[];

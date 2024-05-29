@@ -36,7 +36,7 @@
 </script>
 
 <Label for="log">Log</Label>
-<div id="log" class="bg-gray-700 rounded-lg p-4 overflow-y-auto mt-1 min-h-48 max-h-64 text-sm">
+<div id="log" class="bg-gray-700 rounded-lg p-4 overflow-y-auto mt-1 h-52 text-sm">
     {#each log as { data, level, time }, i}
         <p class={logColor[level]}>[{time.toISOString()}] {level.toUpperCase()}: {data}</p>
     {/each}

@@ -19,7 +19,7 @@ window.addEventListener('gamepaddisconnected', (event) => {
 export function getJoysticks() {
     navigator.getGamepads();
     return navigator.getGamepads().filter((j) => j !== null).map((j) => ({
-        index: j!.index,
+        index: j!.index as 0 | 1 | 2 | 3,
         id: j!.id,
         axes: [...j!.axes],
         buttons: j!.buttons.map((b) => b.pressed)

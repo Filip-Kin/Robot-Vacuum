@@ -1,3 +1,4 @@
+import { log } from '../../util/log';
 import type { MakitaBrushlessMotor } from '../io/motors';
 
 export class Vacuum {
@@ -5,6 +6,7 @@ export class Vacuum {
     private leftBrush: MakitaBrushlessMotor;
     private rightBrush: MakitaBrushlessMotor;
     private vacuum: MakitaBrushlessMotor;
+    private vacuumState: boolean = false;
 
     constructor(mainBrush: MakitaBrushlessMotor, leftBrush: MakitaBrushlessMotor, rightBrush: MakitaBrushlessMotor, vacuum: MakitaBrushlessMotor) {
         this.mainBrush = mainBrush;
@@ -13,14 +15,29 @@ export class Vacuum {
         this.vacuum = vacuum;
     }
 
-    public async start() {
+    public getState() {
+        return this.vacuumState;
+    }
+
+    public toggle() {
+        log.log('Vacuum Toggle');
+        if (this.vacuumState) {
+            this.stop();
+        } else {
+            this.start();
+        }
+    }
+
+    public start() {
+        this.vacuumState = true;
         this.mainBrush.setSpeed(1);
         this.leftBrush.setSpeed(1);
         this.rightBrush.setSpeed(1);
         this.vacuum.setSpeed(1);
     }
 
-    public async stop() {
+    public stop() {
+        this.vacuumState = false;
         this.mainBrush.setSpeed(0);
         this.leftBrush.setSpeed(0);
         this.rightBrush.setSpeed(0);

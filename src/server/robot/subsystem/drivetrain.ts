@@ -1,4 +1,5 @@
 import type { MakitaBrushlessMotor } from '../io/motors';
+import { robotEmitter } from '../robot';
 
 export class DriveTrain {
     private leftMotor: MakitaBrushlessMotor;
@@ -24,16 +25,17 @@ export class DriveTrain {
     public arcadeDrive(speed: number, rotation: number) {
         const [leftSpeed, rightSpeed] = this.arcadeDriveIK(speed, rotation);
         this.setSpeed(leftSpeed, rightSpeed);
+        robotEmitter.emit('dashboard', { speed, rotation, leftSpeed, rightSpeed });
     }
 
     public arcadeDriveIK(speed: number, rotation: number): [number, number] {
-        // Normalize, square (while keeping sign), and scale the inputs
-        speed = Math.max(-1, Math.min(1, speed)) ** 2 * Math.sign(speed) * this.speedScalar;
-        rotation = Math.max(-1, Math.min(1, rotation)) ** 2 * Math.sign(rotation) * this.rotationScalar;
-
         // Apply deadband
         if (Math.abs(speed) < this.deadBand) speed = 0;
         if (Math.abs(rotation) < this.deadBand) rotation = 0;
+
+        // Normalize, square (while keeping sign), and scale the inputs
+        speed = Math.max(-1, Math.min(1, speed)) ** 2 * Math.sign(speed) * this.speedScalar;
+        rotation = Math.max(-1, Math.min(1, rotation)) ** 2 * Math.sign(rotation) * this.rotationScalar;
 
         // Calculate the output speeds
         let leftSpeed = speed - rotation;
