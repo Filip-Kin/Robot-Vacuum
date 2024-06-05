@@ -64,6 +64,20 @@ function abortablePeriodicCall(call: () => Promise<void>) {
     };
 }
 
+robotInstance.button.on('change', async (state) => {
+    if (state === 'falling') {
+        if (robotState === State.DISABLED) {
+            await robotInstance.autonomousInit();
+            robotState = State.AUTONOMOUS;
+            Joystick.disableAll();
+        } else {
+            robotState = State.DISABLED;
+            await robotInstance.disabledInit();
+            Joystick.disableAll();
+        }
+    }
+});
+
 (async () => {
     let resolved = false;
 
@@ -139,8 +153,8 @@ export const robotRouter = t.router({
                 robotState = State.AUTONOMOUS;
                 Joystick.disableAll();
             } else {
-                await robotInstance.disabledInit();
                 robotState = State.DISABLED;
+                await robotInstance.disabledInit();
                 Joystick.disableAll();
             }
         } catch (e) {

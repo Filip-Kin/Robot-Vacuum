@@ -1,12 +1,13 @@
 import { EventEmitter } from 'events';
 import { VoltageSensor } from './io/voltage-sensor';
-import { batteryVoltage, fanMotor, leftDriveMotor, light, mainBrushMotor, rightDriveMotor } from './robot-map';
+import { batteryVoltage, button, buttonLED, fanMotor, leftDriveMotor, light, mainBrushMotor, rightDriveMotor } from './robot-map';
 import { DriveTrain } from './subsystem/drivetrain';
 import { Light } from './subsystem/light';
 import 'dotenv/config';
 import { log } from '../util/log';
 import { Joystick } from '../util/joysticks';
 import { Vacuum } from './subsystem/vacuum';
+import { Button } from './subsystem/button';
 
 export interface Dashboard {
     battery?: number;
@@ -26,16 +27,20 @@ export class Robot {
     batteryVoltage: number = 0;
     driveJoy: Joystick | undefined = Joystick.getJoystick(0);
     vacuum: Vacuum;
+    public button: Button;
 
     constructor() {
         this.drivetrain = new DriveTrain(leftDriveMotor, rightDriveMotor);
         this.light = new Light(light);
         this.batteryVoltageSensor = new VoltageSensor(batteryVoltage);
         this.vacuum = new Vacuum(mainBrushMotor, leftDriveMotor, rightDriveMotor, fanMotor);
+        this.button = new Button(button, buttonLED);
     }
 
     public async robotInit() {
         if (process.env.DEV) this.batteryVoltage = 12;
+        this.button.ledOn();
+        log.log('Robot Init');
     }
 
     public async robotPeriodic() {

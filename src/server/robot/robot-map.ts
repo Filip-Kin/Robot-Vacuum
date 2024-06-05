@@ -1,5 +1,5 @@
 import { Arduino, ArduinoIO } from './io/arduino';
-import { GPIO } from './io/gpio';
+import { GPIO, PollingGPIO } from './io/gpio';
 import { MakitaBrushlessMotor } from './io/motors';
 
 // Hardware PWM on 12, 32, 33, 35
@@ -24,7 +24,8 @@ const rpiPins = {
     fanMotor: {
         pwm: 33
     },
-    light: 7
+    light: 7,
+    button: 8
 };
 
 // Hardware PWM 3, 9, 10, 11, 5, 6 (5, 6 are not recommended)
@@ -39,7 +40,8 @@ const arduinoPins = {
         direction: 8,
         invert: true
     },
-    batteryVoltage: 0
+    batteryVoltage: 0,
+    buttonLED: 5
 };
 
 export const arduino = new Arduino('/dev/ttyACM0');
@@ -76,3 +78,5 @@ export const rightBrushMotor = new MakitaBrushlessMotor(
 // General IO
 export const light = new GPIO(rpiPins.light, 'output');
 export const batteryVoltage = new ArduinoIO(arduinoPins.batteryVoltage, 'analogInput', arduino);
+export const button = new PollingGPIO(rpiPins.button);
+export const buttonLED = new ArduinoIO(arduinoPins.buttonLED, 'output', arduino);
